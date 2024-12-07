@@ -12,6 +12,19 @@
 
 namespace space
 {
-	
+	Scene::Scene(unsigned width, unsigned height)
+	{
+
+	}
+
+	void Scene::update()
+	{
+
+	}
+
+	void Scene::render()
+	{
+
+	}
 }
 
