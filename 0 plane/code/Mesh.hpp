@@ -2,6 +2,7 @@
 #pragma once
 
 #include <glad/glad.h>
+#include <glm.hpp>
 #include <vector>
 
 namespace space
@@ -22,10 +23,10 @@ namespace space
 		GLuint vbo_ids[VBO_COUNT];
 		GLuint vao_id;
 
-		std::vector<GLfloat> vertices;
-		std::vector<GLfloat> normals;
-		std::vector<GLfloat> colors;
-		std::vector<GLuint> indices;
+		std::vector < glm::vec3 > vertices;
+		std::vector < glm::vec3 > normals;
+		std::vector < glm::vec4 > colors;
+		std::vector <GLuint> indices;
 
 	public:
 

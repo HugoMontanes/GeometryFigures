@@ -9,6 +9,7 @@ namespace space
 	{
 
 	public:
+
 		VertexShader() : Shader(GL_VERTEX_SHADER) {}
 
 	};

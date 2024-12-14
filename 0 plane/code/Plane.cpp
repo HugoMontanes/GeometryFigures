@@ -25,23 +25,17 @@ namespace space
 				/**
 				* Vertex position
 				*/
-				vertices.push_back(x);
-				vertices.push_back(0.0f);		///< Plane is flat on XZ
-				vertices.push_back(z);
+				vertices.emplace_back(x, 0.0f, z);
 
 				/**
 				* Normals (pointing up for a flat plane)
 				*/
-				normals.push_back(0.0f);
-				normals.push_back(1.0f);
-				normals.push_back(0.0f);
+				normals.emplace_back(1.0f, 0.0f, 1.0f);
 
 				/**
 				* Colors
 				*/
-				colors.push_back(1.0f);		///< R
-				colors.push_back(0.0f);		///< G
-				colors.push_back(0.0f);		///< B
+				colors.emplace_back(1.0f, 0.0f, 0.0f, 1.0f);
 			}
 		}
 

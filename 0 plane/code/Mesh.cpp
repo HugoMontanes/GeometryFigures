@@ -21,24 +21,24 @@ namespace space
 		* Vertices vbo
 		*/
 		glBindBuffer(GL_ARRAY_BUFFER, vbo_ids[VERTICES_VBO]);
-		glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), vertices.data(), GL_STATIC_DRAW);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+		glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), vertices.data(), GL_STATIC_DRAW);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), nullptr);
 		glEnableVertexAttribArray(0);
 
 		/**
 		* Normals vbo
 		*/
 		glBindBuffer(GL_ARRAY_BUFFER, vbo_ids[NORMALS_VBO]);
-		glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(GLfloat), normals.data(), GL_STATIC_DRAW);
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+		glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(glm::vec3), normals.data(), GL_STATIC_DRAW);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), nullptr);
 		glEnableVertexAttribArray(1);
 
 		/**
 		* Colors vbo
 		*/
 		glBindBuffer(GL_ARRAY_BUFFER, vbo_ids[COLORS_VBO]);
-		glBufferData(GL_ARRAY_BUFFER, colors.size() * sizeof(GLfloat), colors.data(), GL_STATIC_DRAW);
-		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+		glBufferData(GL_ARRAY_BUFFER, colors.size() * sizeof(glm::vec4), colors.data(), GL_STATIC_DRAW);
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec4), nullptr);
 		glEnableVertexAttribArray(2);
 
 		/**

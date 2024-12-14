@@ -3,6 +3,10 @@
 #include <string>
 #include <glad/glad.h>
 
+
+#include "ShaderProgram.hpp"
+#include "Plane.hpp"
+
 namespace space
 {
 	class Shader

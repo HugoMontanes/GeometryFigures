@@ -1,15 +1,16 @@
 
 #pragma once
 
-#include "Mesh.hpp"
-#include "Plane.hpp"
-#include "ShaderProgram.hpp"
-
 #include"glm.hpp"
 
 #include <memory>
 #include <string>
 #include <vector>
+
+#include "Plane.hpp"
+#include "ShaderProgram.hpp"
+#include "VertexShader.hpp"
+#include "FragmentShader.hpp"
 
 namespace space
 {
@@ -21,6 +22,11 @@ namespace space
         glm::mat4 projection_matrix_id;
         GLint normal_matrix_id;
 
+        float angle;
+
+        VertexShader vertex_shader;
+        FragmentShader fragment_shader;
+        ShaderProgram shader_program;
 
 
     public:

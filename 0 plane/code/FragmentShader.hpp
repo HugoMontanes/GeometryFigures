@@ -5,7 +5,7 @@
 
 namespace space
 {
-	class FragmentShader : Shader
+	class FragmentShader : public Shader
 	{
 
 	public:
