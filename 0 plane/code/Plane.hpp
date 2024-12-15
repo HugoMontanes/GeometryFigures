@@ -1,7 +1,7 @@
 
 
 //#ifndef PLANE_HEADER        //Check if PLANE_HEADER is not defined
-#define PLANE_HEADER        //Define PLANE_HEADER
+//#define PLANE_HEADER        //Define PLANE_HEADER
 
 #include "Mesh.hpp"
 
@@ -19,7 +19,7 @@ namespace space
 
     public:
 
-        Plane(unsigned int _rows, unsigned int _cols, float _width, float _height)
+        Plane(unsigned int _rows = 1, unsigned int _cols = 1, float _width = 1.0f, float _height = 1.f)
             : rows(_rows), cols(_cols), width(_width), height(_height)
         {
             initialize();

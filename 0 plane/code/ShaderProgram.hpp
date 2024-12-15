@@ -28,12 +28,12 @@ namespace space
 			}
 		}
 
-		void attachShader(const Shader& shader)
+		void attachShader(const Shader& shader) const
 		{
 			glAttachShader(program_id, shader.getShaderID());
 		}
 
-		bool link() 
+		bool link() const
 		{
 			glLinkProgram(program_id);
 
@@ -50,7 +50,7 @@ namespace space
 			}
 		}
 
-		void use()
+		void use() const
 		{
 			glUseProgram(program_id);
 		}

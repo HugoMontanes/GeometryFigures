@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+#include "Mesh.hpp"
 #include "Plane.hpp"
 #include "ShaderProgram.hpp"
 #include "VertexShader.hpp"
@@ -18,16 +19,14 @@ namespace space
     class Scene
     {
 
-        glm::mat4 model_view_matrix_id;
-        glm::mat4 projection_matrix_id;
+        GLuint model_view_matrix_id;
+        GLuint projection_matrix_id;
         GLint normal_matrix_id;
 
         float angle;
 
-        VertexShader vertex_shader;
-        FragmentShader fragment_shader;
-        ShaderProgram shader_program;
-
+        std::unique_ptr<ShaderProgram> shader_program;
+        std::vector<std::shared_ptr<Mesh>>meshes;
 
     public:
         

@@ -14,6 +14,7 @@ namespace space
 		vertices.reserve((cols + 1) * (rows + 1));
 		normals.reserve((cols * 1) * (rows + 1));
 		colors.reserve((cols * 1) * (rows + 1));
+		indices.reserve(rows * cols * 6);
 
 		for (unsigned int row = 0; row <= rows; ++row)
 		{
