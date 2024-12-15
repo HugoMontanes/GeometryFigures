@@ -42,12 +42,22 @@ namespace space
 			*/
 			GLint success;
 			glGetProgramiv(program_id, GL_LINK_STATUS, &success);
-			if (!success) {
-				char info_log[512];
-				glGetProgramInfoLog(program_id, 512, nullptr, info_log);
-				std::cerr << "Shader program linking error:\n" << info_log << std::endl;
+			if (!success) 
+			{
+
+				GLint log_length = 0;
+				glGetProgramiv(program_id, GL_INFO_LOG_LENGTH, &log_length);
+
+				std::vector<char> info_log(log_length);
+				glGetProgramInfoLog(program_id, log_length, nullptr, info_log.data());
+
+				std::cerr << "Shader program linking error:\n" << info_log.data() << std::endl;
+
 				return false;
 			}
+
+			return true;
+
 		}
 
 		void use() const
@@ -58,6 +68,15 @@ namespace space
 		GLuint getProgramID() const
 		{
 			return program_id;
+		}
+
+		void detachAndDeleteShaders(const std::vector<Shader>& shaders) const
+		{
+			for (const auto& shader : shaders)
+			{
+				glDetachShader(program_id, shader.getShaderID());
+				glDeleteShader(shader.getShaderID());
+			}
 		}
 	};
 }

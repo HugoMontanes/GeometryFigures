@@ -43,6 +43,8 @@ namespace space
 			throw std::runtime_error("Failed to link shader program.");
 		}
 
+		shader_program->detachAndDeleteShaders({ vertex_shader, fragment_shader });
+
 		auto plane = std::make_shared<Plane>(10, 10, 10.0f, 10.0f);
 		meshes.push_back(plane);
 

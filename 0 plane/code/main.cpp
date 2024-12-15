@@ -12,6 +12,8 @@ int main(int, char* [])
 
     Window window("Plane example", Window::Position::CENTERED, Window::Position::CENTERED, viewport_width, viewport_height, { 3,3 });
 
+    space::Scene(1920, 1080);
+
     return 0;
 }
 
