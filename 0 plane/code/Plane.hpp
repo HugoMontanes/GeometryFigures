@@ -8,6 +8,8 @@
 #include <vector>
 #include<glad/glad.h>
 
+#pragma once
+
 namespace space
 {
     class Plane: public Mesh
