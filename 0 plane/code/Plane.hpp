@@ -3,12 +3,12 @@
 //#ifndef PLANE_HEADER        //Check if PLANE_HEADER is not defined
 //#define PLANE_HEADER        //Define PLANE_HEADER
 
+#pragma once
+
 #include "Mesh.hpp"
 
 #include <vector>
 #include<glad/glad.h>
-
-#pragma once
 
 namespace space
 {

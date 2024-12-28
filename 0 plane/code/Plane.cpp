@@ -2,7 +2,6 @@
 
 #include "Plane.hpp"
 #include <vector>
-#include<glad/glad.h>
 
 namespace space
 {
@@ -12,16 +11,16 @@ namespace space
 		float cell_height = height / float(rows);
 
 		vertices.reserve((cols + 1) * (rows + 1));
-		normals.reserve((cols * 1) * (rows + 1));
-		colors.reserve((cols * 1) * (rows + 1));
+		normals.reserve((cols + 1) * (rows + 1));
+		colors.reserve((cols + 1) * (rows + 1));
 		indices.reserve(rows * cols * 6);
 
 		for (unsigned int row = 0; row <= rows; ++row)
 		{
 			for (unsigned int col = 0; col <= cols; ++col)
 			{
-				GLfloat x = col * cell_width - width/ 2.0f;
-				GLfloat z = row * cell_height - height/ 2.0f;
+				GLfloat x = col * cell_width - width / 2.0f;
+				GLfloat z = row * cell_height - height / 2.0f;
 
 				/**
 				* Vertex position
@@ -31,12 +30,12 @@ namespace space
 				/**
 				* Normals (pointing up for a flat plane)
 				*/
-				normals.emplace_back(1.0f, 0.0f, 1.0f);
+				normals.emplace_back(0.0f, 1.0f, 0.0f);
 
 				/**
 				* Colors
 				*/
-				colors.emplace_back(1.0f, 0.0f, 0.0f, 1.0f);
+				colors.emplace_back(1.0f, 0.0f, 0.0f);
 			}
 		}
 

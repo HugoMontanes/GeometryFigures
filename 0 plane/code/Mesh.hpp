@@ -5,6 +5,8 @@
 #include <glm.hpp>
 #include <vector>
 
+#include <iostream>
+
 namespace space
 {
 	class Mesh
@@ -25,20 +27,16 @@ namespace space
 
 		std::vector < glm::vec3 > vertices;
 		std::vector < glm::vec3 > normals;
-		std::vector < glm::vec4 > colors;
+		std::vector < glm::vec3 > colors;
 		std::vector <GLuint> indices;
 
 	public:
 
 		/**
-		* Makes shure al ids are initialized to 0.
+		* Makes shure all ids are initialized to 0.
 		*/
-		Mesh() : vao_id(0)
+		Mesh() : vbo_ids{ 0 }, vao_id(0)
 		{
-			for (unsigned int& id : vbo_ids)
-			{
-				id = 0;
-			}
 		}
 
 		virtual ~Mesh() { cleanUp(); }
@@ -52,9 +50,22 @@ namespace space
 
 		virtual void render() 
 		{
+			if (vao_id == 0) 
+			{ 
+				std::cerr << "Error: VAO not initialized." << std::endl; 
+				return; 
+			}
+
 			glBindVertexArray(vao_id);
 			glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, nullptr);
 			glBindVertexArray(0);
+
+			GLenum error = glGetError(); 
+			if (error != GL_NO_ERROR) 
+			{ 
+				std::cerr << "OpenGL error in render: " << error << std::endl; 
+			}
+
 		}
 
 		void cleanUp()

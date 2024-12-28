@@ -1,7 +1,6 @@
 
 #include"Shader.hpp"
 #include <string>
-#include <glad/glad.h>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -14,7 +13,8 @@ namespace space
 		std::fstream file(file_path);
 		if (!file.is_open())
 		{
-			assert(file);
+			std::cerr << "Failed to open shader file: " << file_path << std::endl; 
+			return false;
 		}
 
 		std::stringstream buffer;

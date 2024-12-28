@@ -2,6 +2,9 @@
 #pragma once
 
 #include"glm.hpp"
+#include <glad/glad.h>
+#include <gtc/matrix_transform.hpp>
+#include <gtc/type_ptr.hpp>
 
 #include <memory>
 #include <string>
