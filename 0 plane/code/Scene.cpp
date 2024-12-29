@@ -18,6 +18,7 @@ namespace space
 
 		shader_program = std::make_unique<ShaderProgram>();
 
+
 		VertexShader vertex_shader;
 		if (!vertex_shader.loadFromFile("../../../shared/assets/shaders/vertex/vertex_shader.glsl"))
 		{
@@ -40,7 +41,7 @@ namespace space
 
 		shader_program->detachAndDeleteShaders({ vertex_shader, fragment_shader });
 
-		auto plane = std::make_shared<Plane>(5, 5, 10.0f, 10.0f);
+		auto plane = std::make_shared<Plane>(5, 5, 5.0f, 5.0f);
 		meshes.push_back(plane);
 
 		model_view_matrix_id = glGetUniformLocation(shader_program->getProgramID(), "model_view_matrix");
@@ -66,7 +67,7 @@ namespace space
 
 		glm::mat4 model_view_matrix(1);
 
-		model_view_matrix = glm::translate(model_view_matrix, glm::vec3(0.f, 0.f, -4.f));
+		model_view_matrix = glm::translate(model_view_matrix, glm::vec3(0.f, 0.f, -10.f));
 		model_view_matrix = glm::rotate(model_view_matrix, angle, glm::vec3(1.f, 2.f, 1.f));
 
 		glUniformMatrix4fv(model_view_matrix_id, 1, GL_FALSE, glm::value_ptr(model_view_matrix));
