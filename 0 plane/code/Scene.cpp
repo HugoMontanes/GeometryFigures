@@ -12,7 +12,7 @@ namespace space
 		: angle(0.0f)
 	{
 		glEnable(GL_CULL_FACE);
-		glEnable(GL_DEPTH_TEST);
+		glDisable(GL_DEPTH_TEST);
 		glClearColor(0.2f, 0.2f, 0.2f, 1.f);
 
 
@@ -41,7 +41,7 @@ namespace space
 
 		shader_program->detachAndDeleteShaders({ vertex_shader, fragment_shader });
 
-		auto plane = std::make_shared<Plane>(5, 5, 5.0f, 5.0f);
+		auto plane = std::make_shared<Plane>(5, 5, 10.0f, 10.0f);
 		meshes.push_back(plane);
 
 		model_view_matrix_id = glGetUniformLocation(shader_program->getProgramID(), "model_view_matrix");

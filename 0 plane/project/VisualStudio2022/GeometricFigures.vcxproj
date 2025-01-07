@@ -133,6 +133,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\code\Cone.cpp" />
     <ClCompile Include="..\..\code\main.cpp" />
     <ClCompile Include="..\..\code\Mesh.cpp" />
     <ClCompile Include="..\..\code\Plane.cpp" />
@@ -141,6 +142,7 @@
     <ClCompile Include="..\..\code\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\code\Cone.hpp" />
     <ClInclude Include="..\..\code\FragmentShader.hpp" />
     <ClInclude Include="..\..\code\Mesh.hpp" />
     <ClInclude Include="..\..\code\Plane.hpp" />

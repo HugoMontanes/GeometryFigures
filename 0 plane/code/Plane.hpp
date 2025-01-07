@@ -8,7 +8,6 @@
 #include "Mesh.hpp"
 
 #include <vector>
-#include<glad/glad.h>
 
 namespace space
 {
