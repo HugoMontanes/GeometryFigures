@@ -21,14 +21,14 @@ namespace space
 		*/
 		vertices.emplace_back(0.0f, height, 0.0f);
 		normals.emplace_back(0.0f, 1.0f, 0.0f);
-		colors.emplace_back(1.0f, 0.0f, 0.0f);
+		colors.emplace_back(0.0f, 1.0f, 0.0f);
 
 		/**
 		* The bottom center vertex
 		*/
 		vertices.emplace_back(0.0f, 0.0f, 0.0f); 
 		normals.emplace_back(0.0f, -1.0f, 0.0f); 
-		colors.emplace_back(1.0f, 0.0f, 0.0f);
+		colors.emplace_back(1.0f, 1.0f, 0.0f);
 		/**
 		* The bottom vertices
 		*/
@@ -39,7 +39,7 @@ namespace space
 			float z = radius * std::sin(angle);
 			vertices.emplace_back(x, 0.0f, z);
 			normals.emplace_back(0.0f, -1.0f, 0.0f);
-			colors.emplace_back(1.0f, 0.0f, 0.0f);
+			colors.emplace_back(0.0f, 1.0f, 0.0f);
 		}
 		/**
 		* The indices

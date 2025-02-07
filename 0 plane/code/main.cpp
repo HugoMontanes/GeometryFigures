@@ -27,7 +27,7 @@ int main(int, char* [])
             {
                 if (event.window.event == SDL_WINDOWEVENT_RESIZED)
                 {
-                    scene.resize(event.window.data1, event.window.data2);
+                    scene.resize(viewport_width, viewport_height);
                 }
             }
         }

@@ -12,12 +12,19 @@
 
 #include "Mesh.hpp"
 #include "Plane.hpp"
+#include "Cone.hpp"
 #include "ShaderProgram.hpp"
 #include "VertexShader.hpp"
 #include "FragmentShader.hpp"
 
 namespace space
 {
+    struct Transform
+    {
+        glm::vec3 position = glm::vec3(0.0f);
+        glm::vec3 rotation = glm::vec3(0.0f);
+        glm::vec3 scale = glm::vec3(1.0f);
+    };
 
     class Scene
     {
@@ -29,7 +36,7 @@ namespace space
         float angle;
 
         std::unique_ptr<ShaderProgram> shader_program;
-        std::vector<std::shared_ptr<Mesh>>meshes;
+        std::vector<std::pair<std::shared_ptr<Mesh>, Transform>> scene_objects;
 
     public:
         

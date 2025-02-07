@@ -11,13 +11,12 @@ namespace space
 	Scene::Scene(unsigned width, unsigned height)
 		: angle(0.0f)
 	{
-		glEnable(GL_CULL_FACE);
+		glDisable(GL_CULL_FACE);
 		glDisable(GL_DEPTH_TEST);
 		glClearColor(0.2f, 0.2f, 0.2f, 1.f);
 
 
 		shader_program = std::make_unique<ShaderProgram>();
-
 
 		VertexShader vertex_shader;
 		if (!vertex_shader.loadFromFile("../../../shared/assets/shaders/vertex/vertex_shader.glsl"))
@@ -41,12 +40,26 @@ namespace space
 
 		shader_program->detachAndDeleteShaders({ vertex_shader, fragment_shader });
 
+		shader_program->use();
+
+		// Create objects with initial transforms
+		Transform plane_transform;
+		plane_transform.position = glm::vec3(0.0f, -2.0f, 0.0f);
+		plane_transform.scale = glm::vec3(1.0f);
 		auto plane = std::make_shared<Plane>(5, 5, 10.0f, 10.0f);
-		meshes.push_back(plane);
+		scene_objects.push_back({ plane, plane_transform });
+
+		Transform cone_transform;
+		cone_transform.position = glm::vec3(0.0f, 1.0f, 0.0f);
+		cone_transform.scale = glm::vec3(0.5f);
+		auto cone = std::make_shared<Cone>(100);
+		scene_objects.push_back({ cone, cone_transform });
 
 		model_view_matrix_id = glGetUniformLocation(shader_program->getProgramID(), "model_view_matrix");
 		normal_matrix_id = glGetUniformLocation(shader_program->getProgramID(), "normal_matrix");
 		projection_matrix_id = glGetUniformLocation(shader_program->getProgramID(), "projection_matrix");
+
+		resize(width, height);
 
 		GLenum error = glGetError();
 		if (error != GL_NO_ERROR)
@@ -65,20 +78,38 @@ namespace space
 
 		shader_program->use();
 
-		glm::mat4 model_view_matrix(1);
+		//Base view matrix (camera transform)
+		glm::mat4 view_matrix = glm::translate(
+			glm::mat4(1.0f), 
+			glm::vec3(0.f, 0.f, -10.f));//< Move camera back 10 units
 
-		model_view_matrix = glm::translate(model_view_matrix, glm::vec3(0.f, 0.f, -10.f));
-		model_view_matrix = glm::rotate(model_view_matrix, angle, glm::vec3(1.f, 2.f, 1.f));
+		// Render each object with its own transform
+		for (const auto& object : scene_objects) {
 
-		glUniformMatrix4fv(model_view_matrix_id, 1, GL_FALSE, glm::value_ptr(model_view_matrix));
+			const auto& mesh = object.first;		// The mesh object
+			const auto& transform = object.second;	// Its transform data
 
-		glm::mat4 normal_matrix = glm::transpose(glm::inverse(model_view_matrix));
+			glm::mat4 model_matrix(1.0f);
 
-		glUniformMatrix4fv(normal_matrix_id, 1, GL_FALSE, glm::value_ptr(normal_matrix));
+			// Apply transforms in order: Scale -> Rotate -> Translate
+			model_matrix = glm::translate(model_matrix, transform.position);
 
-		for (const auto& mesh : meshes) 
-		{ 
-			mesh->render(); 
+			model_matrix = glm::rotate(model_matrix, angle, glm::vec3(1, 0, 0));
+			model_matrix = glm::rotate(model_matrix, transform.rotation.y, glm::vec3(0, 1, 0));
+			model_matrix = glm::rotate(model_matrix, transform.rotation.z, glm::vec3(0, 0, 1));
+
+			model_matrix = glm::scale(model_matrix, transform.scale);
+
+			// Combine with view matrix
+			glm::mat4 model_view_matrix = view_matrix * model_matrix;
+
+			// Update uniforms
+			glUniformMatrix4fv(model_view_matrix_id, 1, GL_FALSE, glm::value_ptr(model_view_matrix));
+			glm::mat4 normal_matrix = glm::transpose(glm::inverse(model_view_matrix));
+			glUniformMatrix4fv(normal_matrix_id, 1, GL_FALSE, glm::value_ptr(normal_matrix));
+
+			// Render the mesh
+			mesh->render();
 		}
 
 		GLenum error = glGetError(); 
