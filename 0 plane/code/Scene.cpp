@@ -44,14 +44,14 @@ namespace space
 
 		// Create objects with initial transforms
 		Transform plane_transform;
-		plane_transform.position = glm::vec3(0.0f, -2.0f, 0.0f);
+		plane_transform.position = glm::vec3(0.0f, 1.0f, 0.0f);
 		plane_transform.scale = glm::vec3(1.0f);
 		auto plane = std::make_shared<Plane>(5, 5, 10.0f, 10.0f);
 		scene_objects.push_back({ plane, plane_transform });
 
 		Transform cone_transform;
 		cone_transform.position = glm::vec3(0.0f, 1.0f, 0.0f);
-		cone_transform.scale = glm::vec3(0.5f);
+		cone_transform.scale = glm::vec3(1.f);
 		auto cone = std::make_shared<Cone>(100);
 		scene_objects.push_back({ cone, cone_transform });
 
