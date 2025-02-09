@@ -16,27 +16,25 @@
 #include "ShaderProgram.hpp"
 #include "VertexShader.hpp"
 #include "FragmentShader.hpp"
+#include "SceneNode.hpp"
+#include "Camera.hpp"
 
 namespace space
 {
-    struct Transform
-    {
-        glm::vec3 position = glm::vec3(0.0f);
-        glm::vec3 rotation = glm::vec3(0.0f);
-        glm::vec3 scale = glm::vec3(1.0f);
-    };
 
     class Scene
     {
 
-        GLuint model_view_matrix_id;
-        GLuint projection_matrix_id;
-        GLint normal_matrix_id;
+        std::unique_ptr<ShaderProgram> shader_program;
+        std::shared_ptr<SceneNode> root;
+        std::shared_ptr<Camera> activeCamera;
+
+        GLuint model_view_matrix_id = -1;
+        GLuint projection_matrix_id = -1;
+        GLint normal_matrix_id = -1;
 
         float angle;
 
-        std::unique_ptr<ShaderProgram> shader_program;
-        std::vector<std::pair<std::shared_ptr<Mesh>, Transform>> scene_objects;
 
     public:
         
@@ -45,5 +43,8 @@ namespace space
         void update();
         void render();
         void resize(unsigned width, unsigned height);
+        void renderNode(const std::shared_ptr<SceneNode>& node, const glm::mat4& viewMatrix);
+        std::shared_ptr<SceneNode> createNode(const std::string& name, std::shared_ptr<SceneNode> parent);
+        std::shared_ptr<SceneNode> findNode(const std::string& name, const std::shared_ptr<SceneNode>& startNode);
     };
 }

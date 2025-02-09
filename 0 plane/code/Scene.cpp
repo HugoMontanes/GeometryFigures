@@ -15,7 +15,6 @@ namespace space
 		glDisable(GL_DEPTH_TEST);
 		glClearColor(0.2f, 0.2f, 0.2f, 1.f);
 
-
 		shader_program = std::make_unique<ShaderProgram>();
 
 		VertexShader vertex_shader;
@@ -33,7 +32,7 @@ namespace space
 		shader_program->attachShader(vertex_shader);
 		shader_program->attachShader(fragment_shader);
 
-		if (!shader_program->link()) 
+		if (!shader_program->link())
 		{
 			throw std::runtime_error("Failed to link shader program.");
 		}
@@ -42,22 +41,28 @@ namespace space
 
 		shader_program->use();
 
-		// Create objects with initial transforms
-		Transform plane_transform;
-		plane_transform.position = glm::vec3(0.0f, 1.0f, 0.0f);
-		plane_transform.scale = glm::vec3(1.0f);
-		auto plane = std::make_shared<Plane>(5, 5, 10.0f, 10.0f);
-		scene_objects.push_back({ plane, plane_transform });
-
-		Transform cone_transform;
-		cone_transform.position = glm::vec3(0.0f, 1.0f, 0.0f);
-		cone_transform.scale = glm::vec3(1.f);
-		auto cone = std::make_shared<Cone>(100);
-		scene_objects.push_back({ cone, cone_transform });
-
+		// Get uniform locations
 		model_view_matrix_id = glGetUniformLocation(shader_program->getProgramID(), "model_view_matrix");
 		normal_matrix_id = glGetUniformLocation(shader_program->getProgramID(), "normal_matrix");
 		projection_matrix_id = glGetUniformLocation(shader_program->getProgramID(), "projection_matrix");
+
+		//Root node
+		root = std::make_shared<SceneNode>("root");
+
+		//Setup camera
+		activeCamera = std::make_shared<Camera>("main_camera");
+		activeCamera->position = glm::vec3(0, 0, 20);
+		root->addChild(activeCamera);
+
+		auto planeNode = std::make_shared<SceneNode>("plane");
+		planeNode->mesh = std::make_shared<Plane>(5, 5, 10.0f, 10.0f);
+		planeNode->position = glm::vec3(0, -2, 0);
+		root->addChild(planeNode);
+
+		auto coneNode = std::make_shared<SceneNode>("cone");
+		coneNode->mesh = std::make_shared<Cone>(100);
+		coneNode->position = glm::vec3(0, 1, 0);
+		planeNode->addChild(coneNode);
 
 		resize(width, height);
 
@@ -67,50 +72,53 @@ namespace space
 			std::cerr << "OpenGL error in Scene constructor: " << error << std::endl;
 		}
 	}
+
 	void Scene::update()
 	{
 		angle += 0.01f;
+	}
+
+	void Scene::renderNode(const std::shared_ptr<SceneNode>& node, const glm::mat4& viewMatrix)
+	{
+		if (node->mesh)
+		{
+			shader_program->use();
+
+			// Calculate matrices
+			glm::mat4 model_matrix = node->getWorldTransform();
+			glm::mat4 model_view_matrix = viewMatrix * model_matrix;
+			glm::mat4 normal_matrix = glm::transpose(glm::inverse(model_view_matrix));
+
+			// Send matrices to shader
+			glUniformMatrix4fv(model_view_matrix_id, 1, GL_FALSE, glm::value_ptr(model_view_matrix));
+			glUniformMatrix4fv(normal_matrix_id, 1, GL_FALSE, glm::value_ptr(normal_matrix));
+
+			// Render the mesh
+			node->mesh->render();
+		}
+
+		// Recursively render children
+		for (const auto& child : node->children) {
+			renderNode(child, viewMatrix);
+		}
+		
 	}
 
 	void Scene::render()
 	{
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		shader_program->use();
+		if (!activeCamera) return;
 
-		//Base view matrix (camera transform)
-		glm::mat4 view_matrix = glm::translate(
-			glm::mat4(1.0f), 
-			glm::vec3(0.f, 0.f, -10.f));//< Move camera back 10 units
+		// Get camera matrices
+		glm::mat4 view_matrix = activeCamera->getViewMatrix();
+		glm::mat4 projection_matrix = activeCamera->getProjectionMatrix();
 
-		// Render each object with its own transform
-		for (const auto& object : scene_objects) {
+		// Send projection matrix to shader
+		glUniformMatrix4fv(projection_matrix_id, 1, GL_FALSE, glm::value_ptr(projection_matrix));
 
-			const auto& mesh = object.first;		// The mesh object
-			const auto& transform = object.second;	// Its transform data
-
-			glm::mat4 model_matrix(1.0f);
-
-			// Apply transforms in order: Scale -> Rotate -> Translate
-			model_matrix = glm::translate(model_matrix, transform.position);
-
-			model_matrix = glm::rotate(model_matrix, angle, glm::vec3(1, 0, 0));
-			model_matrix = glm::rotate(model_matrix, transform.rotation.y, glm::vec3(0, 1, 0));
-			model_matrix = glm::rotate(model_matrix, transform.rotation.z, glm::vec3(0, 0, 1));
-
-			model_matrix = glm::scale(model_matrix, transform.scale);
-
-			// Combine with view matrix
-			glm::mat4 model_view_matrix = view_matrix * model_matrix;
-
-			// Update uniforms
-			glUniformMatrix4fv(model_view_matrix_id, 1, GL_FALSE, glm::value_ptr(model_view_matrix));
-			glm::mat4 normal_matrix = glm::transpose(glm::inverse(model_view_matrix));
-			glUniformMatrix4fv(normal_matrix_id, 1, GL_FALSE, glm::value_ptr(normal_matrix));
-
-			// Render the mesh
-			mesh->render();
-		}
+		// Render scene graph starting from root
+		renderNode(root, view_matrix);
 
 		GLenum error = glGetError(); 
 		if (error != GL_NO_ERROR) 
@@ -121,10 +129,9 @@ namespace space
 
 	void Scene::resize(unsigned width, unsigned height)
 	{
-		glm::mat4 projection_matrix = glm::perspective(20.f, GLfloat(width) / height, 1.f, 500.f);
-
-		glUniformMatrix4fv(projection_matrix_id, 1, GL_FALSE, glm::value_ptr(projection_matrix));
-
+		if (activeCamera) {
+			activeCamera->aspect = float(width) / height;
+		}
 		glViewport(0, 0, width, height);
 
 		GLenum error = glGetError(); 
@@ -133,6 +140,28 @@ namespace space
 		{ 
 			std::cerr << "OpenGL error in resize: " << error << std::endl; 
 		}
+	}
+
+	// Utility functions to manipulate scene
+	std::shared_ptr<SceneNode> Scene::createNode(const std::string& name,
+		std::shared_ptr<SceneNode> parent = nullptr) {
+		auto node = std::make_shared<SceneNode>(name);
+		if (!parent) parent = root;
+		parent->addChild(node);
+		return node;
+	}
+
+	std::shared_ptr<SceneNode> Scene::findNode(const std::string& name,
+		const std::shared_ptr<SceneNode>& startNode = nullptr) {
+		auto node = startNode ? startNode : root;
+		if (node->name == name) return node;
+
+		for (const auto& child : node->children) {
+			if (auto found = findNode(name, child)) {
+				return found;
+			}
+		}
+		return nullptr;
 	}
 }
 
