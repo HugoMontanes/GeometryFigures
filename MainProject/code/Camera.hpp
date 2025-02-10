@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include"glm.hpp"
+#include "glm.hpp"
 #include <glad/glad.h>
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 
-#include"SceneNode.hpp";
+#include "SceneNode.hpp"
 
 namespace space
 {

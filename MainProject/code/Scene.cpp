@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <cassert>
+#include "HeightMapTerrain.hpp"
 
 
 namespace space
@@ -51,10 +52,21 @@ namespace space
 
 		//Setup camera
 		activeCamera = std::make_shared<Camera>("main_camera");
-		activeCamera->position = glm::vec3(0, 0, 20);
+		activeCamera->position = glm::vec3(0, 20, 50);
+		activeCamera->rotation = glm::vec3(-0.4f, 0.0f, 0.0f);
 		root->addChild(activeCamera);
 
-		auto planeNode = std::make_shared<SceneNode>("plane");
+		auto terrainNode = space::createTerrainNode(
+			*this,                          // Scene reference
+			"main_terrain",                 // Node name
+			"../../../shared/assets/textures/heightmaps/heightmap_005.png",      // Path to height map
+			1.0f,                           // Height scale
+			glm::vec3(0, -2, 0),            // Position
+			glm::vec3(0, 0, 0),             // Rotation
+			glm::vec3(2.0f)                 // Scale
+		);
+
+		/*auto planeNode = std::make_shared<SceneNode>("plane");
 		planeNode->mesh = std::make_shared<Plane>(5, 5, 10.0f, 10.0f);
 		planeNode->position = glm::vec3(0, -2, 0);
 		root->addChild(planeNode);
@@ -62,7 +74,7 @@ namespace space
 		auto coneNode = std::make_shared<SceneNode>("cone");
 		coneNode->mesh = std::make_shared<Cone>(100);
 		coneNode->position = glm::vec3(0, 1, 0);
-		planeNode->addChild(coneNode);
+		planeNode->addChild(coneNode);*/
 
 		resize(width, height);
 
@@ -73,9 +85,15 @@ namespace space
 		}
 	}
 
-	void Scene::update()
+	void Scene::update(float deltaTime)
 	{
 		angle += 0.01f;
+
+		//Get current keyboard state
+		const Uint8* keyboardState = SDL_GetKeyboardState(nullptr);
+		handleKeyboard(keyboardState);
+
+		updateCamera(deltaTime);
 	}
 
 	void Scene::renderNode(const std::shared_ptr<SceneNode>& node, const glm::mat4& viewMatrix)
@@ -144,7 +162,7 @@ namespace space
 
 	// Utility functions to manipulate scene
 	std::shared_ptr<SceneNode> Scene::createNode(const std::string& name,
-		std::shared_ptr<SceneNode> parent = nullptr) {
+		std::shared_ptr<SceneNode> parent) {
 		auto node = std::make_shared<SceneNode>(name);
 		if (!parent) parent = root;
 		parent->addChild(node);
@@ -162,6 +180,52 @@ namespace space
 			}
 		}
 		return nullptr;
+	}
+	void Scene::handleKeyboard(const Uint8* keyboardState)
+	{
+		keyStates[SDL_SCANCODE_W] = keyboardState[SDL_SCANCODE_W];
+		keyStates[SDL_SCANCODE_A] = keyboardState[SDL_SCANCODE_A];
+		keyStates[SDL_SCANCODE_D] = keyboardState[SDL_SCANCODE_D];
+		keyStates[SDL_SCANCODE_S] = keyboardState[SDL_SCANCODE_S];
+	}
+	void Scene::updateCamera(float deltaTime)
+	{
+		if (!activeCamera) return;
+
+		//Get the camera's forward and right vectors from its rotation
+		glm::mat4 rotationMatrix(1.0f);
+		rotationMatrix = glm::rotate(rotationMatrix, activeCamera->rotation.y, glm::vec3(0, 1, 0));
+
+		glm::vec3 forward = glm::vec3(
+			-sin(activeCamera->rotation.y),
+			0,
+			-cos(activeCamera->rotation.y)
+		);
+
+		glm::vec3 right = glm::vec3(
+			cos(activeCamera->rotation.y),
+			0,
+			-sin(activeCamera->rotation.y)
+		);
+
+		float moveSpeed = cameraSpeed * deltaTime;
+
+		if (keyStates[SDL_SCANCODE_W])
+		{
+			activeCamera->position += forward * moveSpeed;
+		}
+		if (keyStates[SDL_SCANCODE_S])
+		{
+			activeCamera->position -= forward * moveSpeed;
+		}
+		if (keyStates[SDL_SCANCODE_A])
+		{
+			activeCamera->position -= right * moveSpeed;
+		}
+		if (keyStates[SDL_SCANCODE_D])
+		{
+			activeCamera->position += right * moveSpeed;
+		}
 	}
 }
 
