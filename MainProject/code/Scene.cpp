@@ -59,7 +59,7 @@ namespace space
 		auto terrainNode = space::createTerrainNode(
 			*this,                          // Scene reference
 			"main_terrain",                 // Node name
-			"../../../shared/assets/textures/heightmaps/heightmap_005.png",      // Path to height map
+			"../../../shared/assets/textures/heightmaps/heightmap_001.png",      // Path to height map
 			1.0f,                           // Height scale
 			glm::vec3(0, -2, 0),            // Position
 			glm::vec3(0, 0, 0),             // Rotation
@@ -183,14 +183,31 @@ namespace space
 	}
 	void Scene::handleKeyboard(const Uint8* keyboardState)
 	{
+
+		//Movement keys
 		keyStates[SDL_SCANCODE_W] = keyboardState[SDL_SCANCODE_W];
 		keyStates[SDL_SCANCODE_A] = keyboardState[SDL_SCANCODE_A];
 		keyStates[SDL_SCANCODE_D] = keyboardState[SDL_SCANCODE_D];
 		keyStates[SDL_SCANCODE_S] = keyboardState[SDL_SCANCODE_S];
+
+		//Rotation keys
+		keyStates[SDL_SCANCODE_UP] = keyboardState[SDL_SCANCODE_UP];
+		keyStates[SDL_SCANCODE_DOWN] = keyboardState[SDL_SCANCODE_DOWN];
+		keyStates[SDL_SCANCODE_LEFT] = keyboardState[SDL_SCANCODE_LEFT];
+		keyStates[SDL_SCANCODE_RIGHT] = keyboardState[SDL_SCANCODE_RIGHT];
+
+		// Reset key
+		keyStates[SDL_SCANCODE_C] = keyboardState[SDL_SCANCODE_C];
 	}
 	void Scene::updateCamera(float deltaTime)
 	{
 		if (!activeCamera) return;
+
+		// Handle camera reset
+		if (keyStates[SDL_SCANCODE_C]) {
+			resetCameraRotation();
+			return;
+		}
 
 		//Get the camera's forward and right vectors from its rotation
 		glm::mat4 rotationMatrix(1.0f);
@@ -209,6 +226,7 @@ namespace space
 		);
 
 		float moveSpeed = cameraSpeed * deltaTime;
+		float turnSpeed = cameraRotationSpeed * deltaTime;
 
 		if (keyStates[SDL_SCANCODE_W])
 		{
@@ -225,6 +243,30 @@ namespace space
 		if (keyStates[SDL_SCANCODE_D])
 		{
 			activeCamera->position += right * moveSpeed;
+		}
+
+		// Handle arrow key rotation
+		if (keyStates[SDL_SCANCODE_UP]) {
+			activeCamera->rotation.x -= turnSpeed;
+		}
+		if (keyStates[SDL_SCANCODE_DOWN]) {
+			activeCamera->rotation.x += turnSpeed;
+		}
+		if (keyStates[SDL_SCANCODE_LEFT]) {
+			activeCamera->rotation.y -= turnSpeed;
+		}
+		if (keyStates[SDL_SCANCODE_RIGHT]) {
+			activeCamera->rotation.y += turnSpeed;
+		}
+
+		// Clamp vertical rotation to prevent camera flipping
+		activeCamera->rotation.x = glm::clamp(activeCamera->rotation.x, -glm::half_pi<float>(), glm::half_pi<float>());
+	}
+	void Scene::resetCameraRotation()
+	{
+		if (activeCamera)
+		{
+			activeCamera->rotation = defaultCameraRotation;
 		}
 	}
 }

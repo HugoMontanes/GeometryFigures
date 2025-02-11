@@ -32,6 +32,8 @@ namespace space
         std::shared_ptr<Camera> activeCamera;
 
         float cameraSpeed = 10.0f;
+        float cameraRotationSpeed = 2.0f;
+        glm::vec3 defaultCameraRotation = glm::vec3(0.0f); // Store default rotation
         std::unordered_map<SDL_Scancode, bool> keyStates;
 
         GLuint model_view_matrix_id = -1;
@@ -53,5 +55,6 @@ namespace space
         std::shared_ptr<SceneNode> findNode(const std::string& name, const std::shared_ptr<SceneNode>& startNode);
         void handleKeyboard(const Uint8* keyboardState);
         void updateCamera(float deltaTime);
+        void resetCameraRotation();
     };
 }
