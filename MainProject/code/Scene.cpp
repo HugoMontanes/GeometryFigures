@@ -59,7 +59,7 @@ namespace space
 		auto terrainNode = space::createTerrainNode(
 			*this,                          // Scene reference
 			"main_terrain",                 // Node name
-			"../../../shared/assets/textures/heightmaps/heightmap_001.png",      // Path to height map
+			"../../../shared/assets/textures/heightmaps/heightmap_003.png",      // Path to height map
 			1.0f,                           // Height scale
 			glm::vec3(0, -2, 0),            // Position
 			glm::vec3(0, 0, 0),             // Rotation
