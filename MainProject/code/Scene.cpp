@@ -12,7 +12,7 @@ namespace space
 	Scene::Scene(unsigned width, unsigned height)
 		: angle(0.0f)
 	{
-		glDisable(GL_CULL_FACE);
+		glEnable(GL_CULL_FACE);
 		glDisable(GL_DEPTH_TEST);
 		glClearColor(0.2f, 0.2f, 0.2f, 1.f);
 
@@ -59,7 +59,7 @@ namespace space
 		auto terrainNode = space::createTerrainNode(
 			*this,                          // Scene reference
 			"main_terrain",                 // Node name
-			"../../../shared/assets/textures/heightmaps/heightmap_003.png",      // Path to height map
+			"../../../shared/assets/textures/heightmaps/heightmap_010.png",      // Path to height map
 			1.0f,                           // Height scale
 			glm::vec3(0, -2, 0),            // Position
 			glm::vec3(0, 0, 0),             // Rotation

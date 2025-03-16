@@ -25,6 +25,18 @@ namespace space
         colors.reserve(totalVertices);
         normals.reserve(totalVertices);
 
+        // Define base colors for different heights
+        const glm::vec3 WATER_COLOR(0.0f, 0.3f, 1.0f);    // Deep blue for lowest areas
+        const glm::vec3 SHORE_COLOR(0.0f, 0.8f, 0.8f);    // Teal/light blue for shallow water
+        const glm::vec3 GRASS_COLOR(0.0f, 0.7f, 0.0f);    // Green for mid elevations
+        const glm::vec3 MOUNTAIN_COLOR(0.5f, 0.5f, 0.5f); // Gray for higher elevations
+        const glm::vec3 SNOW_COLOR(0.9f, 0.9f, 0.9f);     // White for peaks
+
+        // Linear interpolation helper function (can be added as a utility or inline)
+        auto lerp = [](const glm::vec3& a, const glm::vec3& b, float t) -> glm::vec3 {
+            return a + t * (b - a);
+            };
+
         //Generate vertices
         for (int z = 0; z < height; z++)
         {
@@ -50,36 +62,29 @@ namespace space
                 //Add vertex
                 vertices.push_back(glm::vec3(xPos, yPos, zPos));
 
-                //Generate color based on height
+                // Generate color based on normalized height
+                float normalizedHeight = yPos / (5.0f * heightScale); // Properly normalize to 0-1
                 glm::vec3 color;
-                float normalizedHeight = yPos / heightScale; // Normalize height to 0-1 range
 
-                if (normalizedHeight < 0.33f) {
-                    // Blue to Green (0-33%)
-                    float t = normalizedHeight / 0.5f;
-                    color = glm::vec3(
-                        0.0f,                    // Red
-                        t,                       // Green
-                        1.0f - (t * 0.5f)       // Blue
-                    );
+                if (normalizedHeight < 0.2f) {
+                    // Water: Deep blue to shore blue (0-20%)
+                    float t = normalizedHeight / 0.2f;
+                    color = lerp(WATER_COLOR, SHORE_COLOR, t);
                 }
-                else if (normalizedHeight < 0.9f) {
-                    // Green to White (33-66%)
-                    float t = (normalizedHeight - 0.33f) / 0.33f;
-                    color = glm::vec3(
-                        t,                       // Red
-                        1.0f,                   // Green
-                        0.5f + (t * 0.5f)       // Blue
-                    );
+                else if (normalizedHeight < 0.4f) {
+                    // Shore to grass (20-40%)
+                    float t = (normalizedHeight - 0.2f) / 0.2f;
+                    color = lerp(SHORE_COLOR, GRASS_COLOR, t);
+                }
+                else if (normalizedHeight < 0.7f) {
+                    // Grass to mountain (40-70%)
+                    float t = (normalizedHeight - 0.4f) / 0.3f;
+                    color = lerp(GRASS_COLOR, MOUNTAIN_COLOR, t);
                 }
                 else {
-                    // White (66-100%)
-                    float t = (normalizedHeight - 0.66f) / 0.34f;
-                    color = glm::vec3(
-                        0.9f,                   // Red
-                        0.9f,                   // Green
-                        0.9f                   // Blue
-                    );
+                    // Mountain to snow (70-100%)
+                    float t = (normalizedHeight - 0.7f) / 0.3f;
+                    color = lerp(MOUNTAIN_COLOR, SNOW_COLOR, t);
                 }
 
                 colors.push_back(color);
@@ -109,7 +114,7 @@ namespace space
                     glm::vec3& up = vertices[upIndex];
                     glm::vec3& down = vertices[downIndex];
 
-                    normals[currentIndex] = glm::normalize(glm::cross(right - left, down - up));
+                    normals[currentIndex] = glm::normalize(glm::cross(down - up, right - left));
                 }
             }
         }
@@ -120,7 +125,7 @@ namespace space
 
         for (int z = 0; z < height - 1; ++z)
         {
-            for (int x = 0; x < width; ++x)
+            for (int x = 0; x < width - 1; ++x)
             {
                 GLuint topLeft = z * width + x;
                 GLuint topRight = z * width + x + 1;
