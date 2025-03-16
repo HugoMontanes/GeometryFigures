@@ -19,6 +19,7 @@
 #include "FragmentShader.hpp"
 #include "SceneNode.hpp"
 #include "Camera.hpp"
+#include "Skybox.hpp"
 #include <unordered_map>
 
 namespace space
@@ -39,6 +40,11 @@ namespace space
         GLuint model_view_matrix_id = -1;
         GLuint projection_matrix_id = -1;
         GLint normal_matrix_id = -1;
+
+        std::unique_ptr<ShaderProgram> skybox_shader;
+        std::shared_ptr<Skybox> skybox;
+        GLuint skybox_view_matrix_id = -1;
+        GLuint skybox_projection_matrix_id = -1;
 
         float angle;
 

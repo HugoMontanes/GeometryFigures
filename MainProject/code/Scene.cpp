@@ -63,7 +63,7 @@ namespace space
 			1.0f,                           // Height scale
 			glm::vec3(0, -2, 0),            // Position
 			glm::vec3(0, 0, 0),             // Rotation
-			glm::vec3(2.0f)                 // Scale
+			glm::vec3(10.0f)                 // Scale
 		);
 
 		/*auto planeNode = std::make_shared<SceneNode>("plane");
@@ -75,6 +75,53 @@ namespace space
 		coneNode->mesh = std::make_shared<Cone>(100);
 		coneNode->position = glm::vec3(0, 1, 0);
 		planeNode->addChild(coneNode);*/
+
+		// Initialize skybox shader
+		skybox_shader = std::make_unique<ShaderProgram>();
+
+		VertexShader skybox_vertex_shader;
+		if (!skybox_vertex_shader.loadFromFile("../../../shared/assets/shaders/vertex/skybox_vertex_shader.glsl"))
+		{
+			throw std::runtime_error("Failed to load skybox vertex shader.");
+		}
+
+		FragmentShader skybox_fragment_shader;
+		if (!skybox_fragment_shader.loadFromFile("../../../shared/assets/shaders/fragment/skybox_fragment_shader.glsl"))
+		{
+			throw std::runtime_error("Failed to load skybox fragment shader.");
+		}
+
+		skybox_shader->attachShader(skybox_vertex_shader);
+		skybox_shader->attachShader(skybox_fragment_shader);
+
+		if (!skybox_shader->link())
+		{
+			throw std::runtime_error("Failed to link skybox shader program.");
+		}
+
+		skybox_shader->detachAndDeleteShaders({ skybox_vertex_shader, skybox_fragment_shader });
+
+		skybox_shader->use();
+		skybox_view_matrix_id = glGetUniformLocation(skybox_shader->getProgramID(), "view_matrix");
+		skybox_projection_matrix_id = glGetUniformLocation(skybox_shader->getProgramID(), "projection_matrix");
+
+		// Set the skybox sampler to use texture unit 0
+		glUniform1i(glGetUniformLocation(skybox_shader->getProgramID(), "skybox"), 0);
+
+		// Create and load the skybox
+		std::vector<std::string> faces = {
+			"../../../shared/assets/textures/skybox/right.jpg",
+			"../../../shared/assets/textures/skybox/left.jpg",
+			"../../../shared/assets/textures/skybox/top.jpg",
+			"../../../shared/assets/textures/skybox/bottom.jpg",
+			"../../../shared/assets/textures/skybox/front.jpg",
+			"../../../shared/assets/textures/skybox/back.jpg"
+		};
+
+		skybox = std::make_shared<Skybox>(faces);
+
+		// Enable depth testing
+		glEnable(GL_DEPTH_TEST);
 
 		resize(width, height);
 
@@ -132,16 +179,28 @@ namespace space
 		glm::mat4 view_matrix = activeCamera->getViewMatrix();
 		glm::mat4 projection_matrix = activeCamera->getProjectionMatrix();
 
-		// Send projection matrix to shader
-		glUniformMatrix4fv(projection_matrix_id, 1, GL_FALSE, glm::value_ptr(projection_matrix));
+		// First render the skybox
+		skybox_shader->use();
 
-		// Render scene graph starting from root
+		// Remove translation from the view matrix to keep skybox centered around camera
+		glm::mat4 skybox_view = glm::mat4(glm::mat3(view_matrix));
+
+		// Send matrices to shader
+		glUniformMatrix4fv(skybox_view_matrix_id, 1, GL_FALSE, glm::value_ptr(skybox_view));
+		glUniformMatrix4fv(skybox_projection_matrix_id, 1, GL_FALSE, glm::value_ptr(projection_matrix));
+
+		// Render skybox
+		skybox->render();
+
+		// Now render the rest of the scene
+		shader_program->use();
+		glUniformMatrix4fv(projection_matrix_id, 1, GL_FALSE, glm::value_ptr(projection_matrix));
 		renderNode(root, view_matrix);
 
-		GLenum error = glGetError(); 
-		if (error != GL_NO_ERROR) 
-		{ 
-			std::cerr << "OpenGL error in render: " << error << std::endl; 
+		GLenum error = glGetError();
+		if (error != GL_NO_ERROR)
+		{
+			std::cerr << "OpenGL error in render: " << error << std::endl;
 		}
 	}
 
@@ -247,16 +306,16 @@ namespace space
 
 		// Handle arrow key rotation
 		if (keyStates[SDL_SCANCODE_UP]) {
-			activeCamera->rotation.x -= turnSpeed;
-		}
-		if (keyStates[SDL_SCANCODE_DOWN]) {
 			activeCamera->rotation.x += turnSpeed;
 		}
+		if (keyStates[SDL_SCANCODE_DOWN]) {
+			activeCamera->rotation.x -= turnSpeed;
+		}
 		if (keyStates[SDL_SCANCODE_LEFT]) {
-			activeCamera->rotation.y -= turnSpeed;
+			activeCamera->rotation.y += turnSpeed;
 		}
 		if (keyStates[SDL_SCANCODE_RIGHT]) {
-			activeCamera->rotation.y += turnSpeed;
+			activeCamera->rotation.y -= turnSpeed;
 		}
 
 		// Clamp vertical rotation to prevent camera flipping

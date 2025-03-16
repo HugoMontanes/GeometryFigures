@@ -142,6 +142,7 @@
     <ClCompile Include="..\..\code\Plane.cpp" />
     <ClCompile Include="..\..\code\Scene.cpp" />
     <ClCompile Include="..\..\code\Shader.cpp" />
+    <ClCompile Include="..\..\code\Skybox.cpp" />
     <ClCompile Include="..\..\code\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -155,6 +156,7 @@
     <ClInclude Include="..\..\code\SceneNode.hpp" />
     <ClInclude Include="..\..\code\Shader.hpp" />
     <ClInclude Include="..\..\code\ShaderProgram.hpp" />
+    <ClInclude Include="..\..\code\Skybox.hpp" />
     <ClInclude Include="..\..\code\VertexShader.hpp" />
     <ClInclude Include="..\..\code\Window.hpp" />
   </ItemGroup>
