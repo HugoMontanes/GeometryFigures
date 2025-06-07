@@ -1,76 +1,44 @@
-#version 330 core
+#version 330
 
-in vec3 vertex_position;
-in vec3 vertex_normal;
-in vec3 vertex_color;
+in vec3 fragment_position;
+in vec3 fragment_normal;
+in vec3 base_color;
 
 out vec4 fragment_color;
 
-uniform mat4 model_view_matrix;
-uniform mat4 projection_matrix;
-uniform mat4 normal_matrix;
-uniform float time;
-uniform float noise_scale;
-
-// Hash function for randomization
-vec2 hash2(vec2 p) {
-    p = vec2(dot(p,vec2(127.1,311.7)), dot(p,vec2(269.5,183.3)));
-    return -1.0 + 2.0 * fract(sin(p)*43758.5453123);
-}
-
-// 2D Perlin noise implementation
-float perlin2D(vec2 p) {
-    vec2 pi = floor(p);
-    vec2 pf = fract(p);
+void main()
+{
+    // Light properties
+    vec3 light_position = vec3(20.0, 50.0, 20.0);  // Position in view space
+    vec3 light_color = vec3(1.0, 1.0, 0.9);        // Slightly warm white light
+    float light_intensity = 1.0;
     
-    vec2 w = pf * pf * (3.0 - 2.0 * pf); // Smoothstep
+    // Material properties
+    vec3 ambient_color = base_color * 0.2;         // Ambient component
+    vec3 diffuse_color = base_color * 0.8;         // Diffuse component
+    vec3 specular_color = vec3(0.5);               // Specular component
+    float shininess = 32.0;                        // Shininess factor for specular
     
-    float n00 = dot(hash2(pi + vec2(0.0, 0.0)), pf - vec2(0.0, 0.0));
-    float n10 = dot(hash2(pi + vec2(1.0, 0.0)), pf - vec2(1.0, 0.0));
-    float n01 = dot(hash2(pi + vec2(0.0, 1.0)), pf - vec2(0.0, 1.0));
-    float n11 = dot(hash2(pi + vec2(1.0, 1.0)), pf - vec2(1.0, 1.0));
+    // Calculate lighting vectors
+    vec3 normal = normalize(fragment_normal);
+    vec3 light_dir = normalize(light_position - fragment_position);
+    vec3 view_dir = normalize(-fragment_position);  // Camera is at origin in view space
+    vec3 reflect_dir = reflect(-light_dir, normal);
     
-    return mix(
-        mix(n00, n10, w.x),
-        mix(n01, n11, w.x),
-        w.y
-    );
-}
-
-// FBM (Fractal Brownian Motion) for multiple octaves of noise
-float fbm(vec2 p) {
-    float value = 0.0;
-    float amplitude = 0.75;
-    float frequency = 0.5;
-	int octaves = 4;
+    // Calculate ambient component
+    vec3 ambient = ambient_color;
     
-    // Add multiple layers of noise
-    for(int i = 0; i < octaves; i++) {
-        value += amplitude * perlin2D(p * frequency);
-        frequency *= 2.0;
-        amplitude *= 0.5;
-    }
+    // Calculate diffuse component
+    float diff = max(dot(normal, light_dir), 0.0);
+    vec3 diffuse = diff * diffuse_color * light_color * light_intensity;
     
-    return value;
-}
-
-void main() {
-    // Use the screen-space coordinates for the noise
-    // This ensures the noise covers the entire screen
-    vec2 noiseCoord = gl_FragCoord.xy * noise_scale / 100.0;
+    // Calculate specular component
+    float spec = pow(max(dot(view_dir, reflect_dir), 0.0), shininess);
+    vec3 specular = spec * specular_color * light_color * light_intensity;
     
-    // Add time for animation if desired
-    noiseCoord += time * 0.5;
+    // Calculate final color
+    vec3 result = ambient + diffuse + specular;
     
-    // Generate base noise value
-    float noise = fbm(noiseCoord);
-    
-    // Map noise from [-1,1] to [0,1] range with more contrast
-    float grayscale = clamp(noise * 0.99 + 0.4, 0.0, 1.0);
-    
-    // Create grayscale color
-    vec3 finalColor = vec3(grayscale);
-    
-    // Output the final color
-    fragment_color = vec4(finalColor, 1.0);
+    // Output final color
+    fragment_color = vec4(result, 1.0);
 }
