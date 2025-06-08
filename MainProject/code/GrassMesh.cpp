@@ -194,8 +194,8 @@ namespace space
         );
 
         // Random distributions for visual variety
-        std::uniform_real_distribution<float> rotDist(0.0f, 2.0f * glm::pi<float>());
-        std::uniform_real_distribution<float> scaleDist(0.001f, 0.003f);
+        std::uniform_real_distribution<float> rotDist(0.0f, 1.5f * glm::pi<float>());
+        std::uniform_real_distribution<float> scaleDist(0.001f, 0.002f);
         std::uniform_real_distribution<float> heightOffsetDist(-0.05f, 0.05f);
         std::uniform_real_distribution<float> colorVariation(0.9f, 1.1f);
 

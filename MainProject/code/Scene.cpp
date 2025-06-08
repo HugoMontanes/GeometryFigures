@@ -118,7 +118,7 @@ namespace space
 			grassMesh = terrainMesh->createGrassForTerrain(
 				terrainTransform,
 				"../../../shared/assets/models/SM_Grass.fbx",
-				100000
+				500000
 			);
 
 			if (grassMesh)
