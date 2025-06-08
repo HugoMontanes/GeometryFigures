@@ -109,22 +109,47 @@ namespace space
 		grass_projection_matrix_id = glGetUniformLocation(grass_shader->getProgramID(), "projection_matrix");
 
 		// Create grass on the terrain
-		if (terrainMesh)
+		if (terrainMesh && terrainNode)
 		{
+			// Get the terrain's world transform matrix
+			glm::mat4 terrainTransform = terrainNode->getWorldTransform();
+
+			// Create grass using the terrain-aware method
 			grassMesh = terrainMesh->createGrassForTerrain(
-				*terrainMesh, 
+				terrainTransform,
 				"../../../shared/assets/models/SM_Grass.fbx",
-				5000);
+				5000
+			);
 
 			if (grassMesh)
 			{
 				std::cout << "Successfully created " << grassMesh->getInstanceCount()
 					<< " grass instances on terrain" << std::endl;
+
+				// Debug: Print some grass positions to verify placement
+				if (grassMesh->getInstanceCount() > 0)
+				{
+					std::cout << "Terrain transform: " << std::endl;
+					std::cout << "  Position: " << terrainNode->position.x << ", "
+						<< terrainNode->position.y << ", " << terrainNode->position.z << std::endl;
+					std::cout << "  Scale: " << terrainNode->scale.x << ", "
+						<< terrainNode->scale.y << ", " << terrainNode->scale.z << std::endl;
+				}
 			}
 			else
 			{
 				std::cerr << "Failed to create grass instances" << std::endl;
 			}
+		}
+
+		if (grassMesh) {
+			grassMesh->printStatistics();
+
+			// Also print terrain info
+			std::cout << "Terrain info:" << std::endl;
+			std::cout << "  Local scale: " << terrainMesh->getTerrainWorldScale() << std::endl;
+			std::cout << "  Scene scale: " << terrainNode->scale.x << std::endl;
+			std::cout << "  World span: " << (terrainMesh->getTerrainWorldScale() * terrainNode->scale.x) << std::endl;
 		}
 
 		// Initialize skybox shader

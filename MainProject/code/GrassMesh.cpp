@@ -1,4 +1,6 @@
+
 #include "GrassMesh.hpp"
+#include "HeightMapTerrain.hpp"
 #include <iostream>
 #include <functional>
 #include <ext/scalar_constants.hpp>
@@ -165,6 +167,90 @@ namespace space
         }
 
         std::cout << "Generated " << instances.size() << " grass instances" << std::endl;
+
+        // Set up the instance buffer after generation
+        setupInstanceBuffer();
+    }
+
+    void GrassMesh::generateInstancesForTerrain(int instanceCount, float worldWidth, float worldHeight, const glm::vec3& terrainWorldPos, std::function<GrassHeightInfo(float, float)> heightSampler)
+    {
+        instances.clear();
+        instances.reserve(instanceCount);
+
+        std::random_device rd;
+        std::mt19937 gen(rd());
+
+        // Distribution for random placement in world space
+        // The terrain is centered at terrainWorldPos, so we distribute around it
+        std::uniform_real_distribution<float> posDistX(
+            terrainWorldPos.x - worldWidth / 2.0f,
+            terrainWorldPos.x + worldWidth / 2.0f
+        );
+        std::uniform_real_distribution<float> posDistZ(
+            terrainWorldPos.z - worldHeight / 2.0f,
+            terrainWorldPos.z + worldHeight / 2.0f
+        );
+
+        // Random distributions for visual variety
+        std::uniform_real_distribution<float> rotDist(0.0f, 2.0f * glm::pi<float>());
+        std::uniform_real_distribution<float> scaleDist(0.8f, 1.2f);
+        std::uniform_real_distribution<float> heightOffsetDist(-0.05f, 0.05f);
+        std::uniform_real_distribution<float> colorVariation(0.9f, 1.1f);
+
+        int attemptCount = 0;
+        int maxAttempts = instanceCount * 10;  // Allow multiple attempts for better coverage
+
+        // Debug info
+        std::cout << "Generating grass in world bounds:" << std::endl;
+        std::cout << "  X: [" << (terrainWorldPos.x - worldWidth / 2)
+            << " to " << (terrainWorldPos.x + worldWidth / 2) << "]" << std::endl;
+        std::cout << "  Z: [" << (terrainWorldPos.z - worldHeight / 2)
+            << " to " << (terrainWorldPos.z + worldHeight / 2) << "]" << std::endl;
+
+        while (instances.size() < instanceCount && attemptCount < maxAttempts)
+        {
+            attemptCount++;
+
+            // Generate random position in world space
+            float worldX = posDistX(gen);
+            float worldZ = posDistZ(gen);
+
+            // Sample height information at this position
+            GrassHeightInfo heightInfo = heightSampler(worldX, worldZ);
+
+            // Check if this height is suitable for grass
+            // normalizedHeight should be between 0 and 1
+            if (heightInfo.normalizedHeight < minHeight || heightInfo.normalizedHeight > maxHeight)
+            {
+                continue;  // Skip water and mountain peaks
+            }
+
+            // Use the world height directly from the sampler
+            float worldY = heightInfo.worldHeight;
+
+            // Add slight random height offset for natural variation
+            worldY += heightOffsetDist(gen);
+
+            // Get appropriate color for this height
+            glm::vec3 grassColor = getColorForHeight(heightInfo.normalizedHeight);
+
+            // Add some color variation for natural look
+            grassColor *= colorVariation(gen);
+            grassColor = glm::clamp(grassColor, glm::vec3(0.0f), glm::vec3(1.0f));
+
+            // Create grass instance
+            GrassInstance instance;
+            instance.position = glm::vec3(worldX, worldY, worldZ);
+            instance.color = grassColor;
+            instance.scale = scaleDist(gen);
+            instance.rotation = rotDist(gen);
+
+            instances.push_back(instance);
+        }
+
+        std::cout << "Generated " << instances.size() << " grass instances out of "
+            << instanceCount << " requested (attempt ratio: "
+            << (float)attemptCount / instances.size() << ")" << std::endl;
 
         // Set up the instance buffer after generation
         setupInstanceBuffer();

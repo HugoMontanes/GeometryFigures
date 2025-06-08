@@ -10,6 +10,9 @@
 
 namespace space
 {
+    // Forward declaration from HeightMapTerrain
+    struct GrassHeightInfo;
+
     struct GrassInstance
     {
         glm::vec3 position;
@@ -26,7 +29,7 @@ namespace space
         GLuint instanceVBO;
 
         // Grass parameters
-        float minHeight = 0.2f;
+        float minHeight = 0.15f;
         float maxHeight = 0.7f;
         float density = 0.5f;
 
@@ -58,13 +61,19 @@ namespace space
 
         bool loadFromFile(const std::string& filepath);
 
-        // NEW: Generate instances using a height sampling function
-        // This removes the dependency on HeightMapTerrain!
         void generateInstances(
             int instanceCount,
             float terrainWidth,
             float terrainHeight,
             std::function<float(float, float)> heightSampler
+        );
+
+        void generateInstancesForTerrain(
+            int instanceCount,
+            float worldWidth,
+            float worldHeight,
+            const glm::vec3& terrainWorldPos,
+            std::function<GrassHeightInfo(float, float)> heightSampler
         );
 
         void initialize() override {}
@@ -74,5 +83,7 @@ namespace space
         void setHeightRange(float min, float max) { minHeight = min; maxHeight = max; }
         void setDensity(float d) { density = glm::clamp(d, 0.0f, 1.0f); }
         size_t getInstanceCount() const { return instances.size(); }
+
+        void printStatistics() const;
     };
 }

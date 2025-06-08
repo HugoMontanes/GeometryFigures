@@ -1,5 +1,5 @@
 
-#include"HeightMapTerrain.hpp"
+#include "HeightMapTerrain.hpp"
 
 namespace space
 {
@@ -151,47 +151,100 @@ namespace space
         setUpMesh();
     }
 
+    float HeightMapTerrain::getHeightAtWorldPosition(float worldX, float worldZ, const glm::mat4& terrainTransform) const
+    {
+        // Transform world position to terrain's local space
+        glm::vec4 worldPos(worldX, 0, worldZ, 1);
+        glm::mat4 invTransform = glm::inverse(terrainTransform);
+        glm::vec4 localPos = invTransform * worldPos;
+
+        // Now localPos is in the terrain's coordinate system (-10 to 10)
+        // Convert to texture coordinates (0 to 1)
+        float u = (localPos.x + terrainWorldScale * 0.5f) / terrainWorldScale;
+        float v = (localPos.z + terrainWorldScale * 0.5f) / terrainWorldScale;
+
+        // Clamp to valid range
+        u = glm::clamp(u, 0.0f, 1.0f);
+        v = glm::clamp(v, 0.0f, 1.0f);
+
+        // Get the four surrounding vertices for bilinear interpolation
+        float fx = u * (width - 1);
+        float fz = v * (height - 1);
+
+        int x0 = (int)fx;
+        int z0 = (int)fz;
+        int x1 = glm::min(x0 + 1, width - 1);
+        int z1 = glm::min(z0 + 1, height - 1);
+
+        // Get the fractional parts for interpolation
+        float wx = fx - x0;
+        float wz = fz - z0;
+
+        // Get heights at the four corners
+        float h00 = getHeightAtIndex(z0 * width + x0);
+        float h10 = getHeightAtIndex(z0 * width + x1);
+        float h01 = getHeightAtIndex(z1 * width + x0);
+        float h11 = getHeightAtIndex(z1 * width + x1);
+
+        // Bilinear interpolation
+        float h0 = h00 * (1 - wx) + h10 * wx;
+        float h1 = h01 * (1 - wx) + h11 * wx;
+        float height = h0 * (1 - wz) + h1 * wz;
+
+        // Apply the terrain's Y scale to the height
+        return height * terrainTransform[1][1];
+    }
+
     std::shared_ptr<GrassMesh> HeightMapTerrain::createGrassForTerrain(
-        const HeightMapTerrain& terrain,
+        const glm::mat4& terrainTransform,
         const std::string& grassModelPath,
         int instanceCount)
     {
         // Create grass mesh
         auto grass = std::make_shared<GrassMesh>();
-        
+
         // Load the grass model
         if (!grass->loadFromFile(grassModelPath))
         {
             std::cerr << "Failed to load grass model: " << grassModelPath << std::endl;
             return nullptr;
         }
-        
-        // Create a height sampling function that captures the terrain
-        auto heightSampler = [&terrain](float x, float z) -> float {
-            // Convert world coordinates to terrain coordinates
-            // Assuming terrain spans from -10 to 10 in world space
-            float u = (x + 10.0f) / 20.0f;
-            float v = (z + 10.0f) / 20.0f;
-            
-            // Clamp to valid range
-            u = glm::clamp(u, 0.0f, 1.0f);
-            v = glm::clamp(v, 0.0f, 1.0f);
-            
-            // Sample height from terrain
-            int texX = static_cast<int>(u * (terrain.getWidth() - 1));
-            int texZ = static_cast<int>(v * (terrain.getHeight() - 1));
-            
-            // Get vertex index
-            int index = texZ * terrain.getWidth() + texX;
-            
-            // Return normalized height (0-1 range)
-            // You'll need to add a method to HeightMapTerrain to access vertex heights
-            return terrain.getHeightAtIndex(index) / 5.0f; // Assuming max height is 5
-        };
-        
-        // Generate instances
-        grass->generateInstances(instanceCount, 20.0f, 20.0f, heightSampler);
-        
+
+        // Create a height sampling function that properly handles coordinate transforms
+        auto heightSampler = [this, terrainTransform](float worldX, float worldZ) -> GrassHeightInfo {
+            // Get the actual height at this world position
+            float localHeight = getHeightAtWorldPosition(worldX, worldZ, terrainTransform);
+
+            // Get terrain's world Y position from transform
+            float terrainWorldY = terrainTransform[3][1];
+
+            // Calculate absolute world height
+            float absoluteWorldHeight = terrainWorldY + localHeight;
+
+            // Normalize based on expected height range
+            // The terrain heights range from 0 to 5*heightScale in local space
+            // After transform and offset, they range from (terrainY) to (terrainY + 5*scale*heightScale)
+            float maxHeightRange = 5.0f * heightScale * terrainTransform[1][1];
+            float normalizedHeight = localHeight / (5.0f * heightScale);
+
+            return GrassHeightInfo{ absoluteWorldHeight, normalizedHeight };
+            };
+
+        // Calculate the world space bounds of the terrain
+        float worldScale = terrainTransform[0][0] * terrainWorldScale;  // X scale * terrain size
+
+        // Get terrain world position
+        glm::vec3 terrainWorldPos(terrainTransform[3][0], terrainTransform[3][1], terrainTransform[3][2]);
+
+        // Generate instances with proper world bounds
+        grass->generateInstancesForTerrain(
+            instanceCount,
+            worldScale,        // Actual world width
+            worldScale,        // Actual world height  
+            terrainWorldPos,   // Terrain center in world space
+            heightSampler
+        );
+
         return grass;
     }
 }
