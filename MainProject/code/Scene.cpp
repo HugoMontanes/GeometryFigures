@@ -62,8 +62,8 @@ namespace space
 			1.0f  // height scale
 		);
 		terrainNode->mesh = terrainMesh;
-		terrainNode->position = glm::vec3(0, -2, 0);
-		terrainNode->scale = glm::vec3(10.0f);
+		terrainNode->position = glm::vec3(0, 15, 20);
+		terrainNode->scale = glm::vec3(1.0f);
 		root->addChild(terrainNode);
 
 		/*auto planeNode = std::make_shared<SceneNode>("plane");
@@ -118,7 +118,7 @@ namespace space
 			grassMesh = terrainMesh->createGrassForTerrain(
 				terrainTransform,
 				"../../../shared/assets/models/SM_Grass.fbx",
-				5000
+				100000
 			);
 
 			if (grassMesh)

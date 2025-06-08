@@ -4,6 +4,8 @@
 #include <iostream>
 #include <functional>
 #include <ext/scalar_constants.hpp>
+#include <map>
+
 
 namespace space
 {
@@ -193,7 +195,7 @@ namespace space
 
         // Random distributions for visual variety
         std::uniform_real_distribution<float> rotDist(0.0f, 2.0f * glm::pi<float>());
-        std::uniform_real_distribution<float> scaleDist(0.8f, 1.2f);
+        std::uniform_real_distribution<float> scaleDist(0.001f, 0.003f);
         std::uniform_real_distribution<float> heightOffsetDist(-0.05f, 0.05f);
         std::uniform_real_distribution<float> colorVariation(0.9f, 1.1f);
 
@@ -344,5 +346,59 @@ namespace space
         {
             std::cerr << "OpenGL error in grass render: " << error << std::endl;
         }
+    }
+
+    void GrassMesh::printStatistics() const
+    {
+        if (instances.empty())
+        {
+            std::cout << "No grass instances generated!" << std::endl;
+            return;
+        }
+
+        // Calculate bounds and statistics
+        glm::vec3 minPos = instances[0].position;
+        glm::vec3 maxPos = instances[0].position;
+        float avgHeight = 0.0f;
+
+        std::map<std::string, int> colorZones;
+
+        for (const auto& instance : instances)
+        {
+            minPos = glm::min(minPos, instance.position);
+            maxPos = glm::max(maxPos, instance.position);
+            avgHeight += instance.position.y;
+
+            // Categorize by color (height zone)
+            std::string zone = "unknown";
+            if (instance.color.g > 0.7f && instance.color.r < 0.3f)
+                zone = "meadow";
+            else if (instance.color.r > 0.35f && instance.color.g > 0.7f)
+                zone = "shore";
+            else if (instance.color.g < 0.6f)
+                zone = "hill";
+
+            colorZones[zone]++;
+        }
+
+        avgHeight /= instances.size();
+
+        std::cout << "\n=== Grass Statistics ===" << std::endl;
+        std::cout << "Total instances: " << instances.size() << std::endl;
+        std::cout << "Bounds: " << std::endl;
+        std::cout << "  X: [" << minPos.x << " to " << maxPos.x
+            << "] (span: " << (maxPos.x - minPos.x) << ")" << std::endl;
+        std::cout << "  Y: [" << minPos.y << " to " << maxPos.y
+            << "] (span: " << (maxPos.y - minPos.y) << ")" << std::endl;
+        std::cout << "  Z: [" << minPos.z << " to " << maxPos.z
+            << "] (span: " << (maxPos.z - minPos.z) << ")" << std::endl;
+        std::cout << "Average height: " << avgHeight << std::endl;
+        std::cout << "Distribution by zone:" << std::endl;
+        for (const auto& [zone, count] : colorZones)
+        {
+            std::cout << "  " << zone << ": " << count
+                << " (" << (100.0f * count / instances.size()) << "%)" << std::endl;
+        }
+        std::cout << "========================\n" << std::endl;
     }
 }
