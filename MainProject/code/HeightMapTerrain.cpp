@@ -150,4 +150,48 @@ namespace space
         // Set up OpenGL buffers
         setUpMesh();
     }
+
+    std::shared_ptr<GrassMesh> HeightMapTerrain::createGrassForTerrain(
+        const HeightMapTerrain& terrain,
+        const std::string& grassModelPath,
+        int instanceCount)
+    {
+        // Create grass mesh
+        auto grass = std::make_shared<GrassMesh>();
+        
+        // Load the grass model
+        if (!grass->loadFromFile(grassModelPath))
+        {
+            std::cerr << "Failed to load grass model: " << grassModelPath << std::endl;
+            return nullptr;
+        }
+        
+        // Create a height sampling function that captures the terrain
+        auto heightSampler = [&terrain](float x, float z) -> float {
+            // Convert world coordinates to terrain coordinates
+            // Assuming terrain spans from -10 to 10 in world space
+            float u = (x + 10.0f) / 20.0f;
+            float v = (z + 10.0f) / 20.0f;
+            
+            // Clamp to valid range
+            u = glm::clamp(u, 0.0f, 1.0f);
+            v = glm::clamp(v, 0.0f, 1.0f);
+            
+            // Sample height from terrain
+            int texX = static_cast<int>(u * (terrain.getWidth() - 1));
+            int texZ = static_cast<int>(v * (terrain.getHeight() - 1));
+            
+            // Get vertex index
+            int index = texZ * terrain.getWidth() + texX;
+            
+            // Return normalized height (0-1 range)
+            // You'll need to add a method to HeightMapTerrain to access vertex heights
+            return terrain.getHeightAtIndex(index) / 5.0f; // Assuming max height is 5
+        };
+        
+        // Generate instances
+        grass->generateInstances(instanceCount, 20.0f, 20.0f, heightSampler);
+        
+        return grass;
+    }
 }

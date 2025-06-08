@@ -10,6 +10,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 #include "Mesh.hpp"
 #include "Plane.hpp"
@@ -20,7 +21,7 @@
 #include "SceneNode.hpp"
 #include "Camera.hpp"
 #include "Skybox.hpp"
-#include <unordered_map>
+#include "GrassMesh.hpp"
 
 namespace space
 {
@@ -47,6 +48,13 @@ namespace space
         GLuint skybox_projection_matrix_id = -1;
 
         float angle;
+
+        // Grass system
+        std::shared_ptr<GrassMesh> grassMesh;
+        std::unique_ptr<ShaderProgram> grass_shader;
+        GLuint grass_model_view_matrix_id = -1;
+        GLuint grass_projection_matrix_id = -1;
+        GLint grass_normal_matrix_id = -1;
 
 
     public:

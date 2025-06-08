@@ -111,7 +111,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>..\..\..\libraries\sdl\lib\windows\visual-studio-2022\static-x64;..\..\..\libraries\glad\lib\windows\visual-studio-2022\static-x64;../../../libraries/soil2/lib/windows/visual-studio-2019/static-x64;..\..\..\libraries\assimp\lib\windows\visual-studio-2022\static-x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2-staticd.lib;SDL2maind.lib;gladd.lib;imm32.lib;setupapi.lib;version.lib;winmm.lib;opengl32.lib;soil2-debug.lib;zlibstaticd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2-staticd.lib;SDL2maind.lib;gladd.lib;imm32.lib;setupapi.lib;version.lib;winmm.lib;opengl32.lib;soil2-debug.lib;zlibstaticd.lib;assimp-vc143-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -131,7 +131,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>..\..\..\libraries\sdl\lib\windows\visual-studio-2022\static-x64;..\..\..\libraries\glad\lib\windows\visual-studio-2022\static-x64;../../../libraries/soil2/lib/windows/visual-studio-2019/static-x64;..\..\..\libraries\assimp\lib\windows\visual-studio-2022\static-x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2-static.lib;SDL2main.lib;glad.lib;imm32.lib;setupapi.lib;version.lib;winmm.lib;opengl32.lib;soil2.lib;zlibstatic.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2-static.lib;SDL2main.lib;glad.lib;imm32.lib;setupapi.lib;version.lib;winmm.lib;opengl32.lib;soil2.lib;zlibstatic.lib;assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

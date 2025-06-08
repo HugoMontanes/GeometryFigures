@@ -1,13 +1,13 @@
 #include "GrassMesh.hpp"
 #include <iostream>
+#include <functional>
+#include <ext/scalar_constants.hpp>
 
 namespace space
 {
     bool GrassMesh::loadFromFile(const std::string& filepath)
     {
         // Load the mesh file using Assimp
-        // aiProcess_Triangulate ensures all faces are triangles
-        // aiProcess_GenNormals generates normals if they're missing
         const aiScene* scene = importer->ReadFile(filepath,
             aiProcess_Triangulate |
             aiProcess_GenNormals |
@@ -23,7 +23,6 @@ namespace space
         }
 
         // For grass, we typically just need the first mesh
-        // More complex models might have multiple meshes
         if (scene->mNumMeshes > 0)
         {
             processMesh(scene->mMeshes[0]);
@@ -64,16 +63,14 @@ namespace space
             }
 
             // Color - will be overridden by instance color
-            // Using white as base color to be modulated by instance color
             colors.push_back(glm::vec3(1.0f, 1.0f, 1.0f));
         }
 
         // Process indices
-        indices.reserve(mesh->mNumFaces * 3); // Assuming triangles
+        indices.reserve(mesh->mNumFaces * 3);
         for (unsigned int i = 0; i < mesh->mNumFaces; i++)
         {
             aiFace face = mesh->mFaces[i];
-            // We triangulated the mesh, so each face should have 3 vertices
             for (unsigned int j = 0; j < face.mNumIndices; j++)
             {
                 indices.push_back(face.mIndices[j]);
@@ -84,7 +81,38 @@ namespace space
             << indices.size() / 3 << " triangles" << std::endl;
     }
 
-    void GrassMesh::generateInstances(const HeightMapTerrain& terrain, int instanceCount)
+    glm::vec3 GrassMesh::getColorForHeight(float normalizedHeight)
+    {
+        // Determine grass color based on height
+        // This matches the terrain coloring scheme
+        glm::vec3 grassColor;
+
+        if (normalizedHeight < 0.35f)
+        {
+            // Near shore - lighter, more vibrant grass
+            grassColor = SHORE_GRASS_COLOR;
+        }
+        else if (normalizedHeight < 0.55f)
+        {
+            // Meadow - rich green grass
+            float t = (normalizedHeight - 0.35f) / 0.2f;
+            grassColor = lerp(SHORE_GRASS_COLOR, MEADOW_GRASS_COLOR, t);
+        }
+        else
+        {
+            // Hills - darker, more muted grass
+            float t = (normalizedHeight - 0.55f) / 0.15f;
+            grassColor = lerp(MEADOW_GRASS_COLOR, HILL_GRASS_COLOR, t);
+        }
+
+        return grassColor;
+    }
+
+    void GrassMesh::generateInstances(
+        int instanceCount,
+        float terrainWidth,
+        float terrainHeight,
+        std::function<float(float, float)> heightSampler)
     {
         instances.clear();
         instances.reserve(instanceCount);
@@ -92,13 +120,15 @@ namespace space
         // Random number generation for placement
         std::random_device rd;
         std::mt19937 gen(rd());
-        std::uniform_real_distribution<float> posDistX(-10.0f, 10.0f); // Terrain spans -10 to 10
-        std::uniform_real_distribution<float> posDistZ(-10.0f, 10.0f);
+
+        // Distribution for random placement across terrain
+        std::uniform_real_distribution<float> posDistX(-terrainWidth / 2, terrainWidth / 2);
+        std::uniform_real_distribution<float> posDistZ(-terrainHeight / 2, terrainHeight / 2);
         std::uniform_real_distribution<float> rotDist(0.0f, 2.0f * glm::pi<float>());
-        std::uniform_real_distribution<float> scaleDist(0.8f, 1.2f); // Slight size variation
+        std::uniform_real_distribution<float> scaleDist(0.8f, 1.2f);
 
         int attemptCount = 0;
-        int maxAttempts = instanceCount * 10; // Allow multiple attempts to place grass
+        int maxAttempts = instanceCount * 10; // Allow multiple attempts
 
         while (instances.size() < instanceCount && attemptCount < maxAttempts)
         {
@@ -108,63 +138,25 @@ namespace space
             float x = posDistX(gen);
             float z = posDistZ(gen);
 
-            // Sample height from terrain at this position
-            // Convert world position to terrain texture coordinates
-            float u = (x + 10.0f) / 20.0f; // Map from [-10,10] to [0,1]
-            float v = (z + 10.0f) / 20.0f;
-
-            // Get terrain dimensions and sample height
-            int terrainWidth = terrain.getWidth();
-            int terrainHeight = terrain.getHeight();
-
-            int texX = static_cast<int>(u * (terrainWidth - 1));
-            int texZ = static_cast<int>(v * (terrainHeight - 1));
-
-            // Clamp to valid range
-            texX = glm::clamp(texX, 0, terrainWidth - 1);
-            texZ = glm::clamp(texZ, 0, terrainHeight - 1);
-
-            // Get height from terrain vertex data
-            // The terrain generates vertices in a grid, so we can calculate the index
-            int vertexIndex = texZ * terrainWidth + texX;
-
-            // This is a simplified height sampling - in practice, you might want to
-            // interpolate between vertices for smoother placement
-            float terrainY = 0.0f; // Default height
-
-            // For now, we'll use a simplified height calculation based on the normalized position
-            // In a full implementation, you'd access the actual terrain vertex data
-            float normalizedHeight = 0.4f + 0.2f * sin(x * 0.5f) * cos(z * 0.5f); // Placeholder
+            // Sample height at this position using the provided function
+            float normalizedHeight = heightSampler(x, z);
 
             // Check if this height is suitable for grass
             if (normalizedHeight < minHeight || normalizedHeight > maxHeight)
             {
-                continue; // Skip this position
+                continue; // Skip positions that are too low (water) or too high (mountains)
             }
 
-            // Determine grass color based on height
-            glm::vec3 grassColor;
-            if (normalizedHeight < 0.35f)
-            {
-                // Near shore
-                grassColor = SHORE_GRASS_COLOR;
-            }
-            else if (normalizedHeight < 0.55f)
-            {
-                // Meadow
-                float t = (normalizedHeight - 0.35f) / 0.2f;
-                grassColor = lerp(SHORE_GRASS_COLOR, MEADOW_GRASS_COLOR, t);
-            }
-            else
-            {
-                // Hills
-                float t = (normalizedHeight - 0.55f) / 0.15f;
-                grassColor = lerp(MEADOW_GRASS_COLOR, HILL_GRASS_COLOR, t);
-            }
+            // Calculate world Y position from normalized height
+            // Assuming terrain height scale of 5.0f (matching your terrain)
+            float worldY = normalizedHeight * 5.0f - 2.0f;
+
+            // Get appropriate color for this height
+            glm::vec3 grassColor = getColorForHeight(normalizedHeight);
 
             // Create grass instance
             GrassInstance instance;
-            instance.position = glm::vec3(x, normalizedHeight * 5.0f - 2.0f, z); // Match terrain Y scaling
+            instance.position = glm::vec3(x, worldY, z);
             instance.color = grassColor;
             instance.scale = scaleDist(gen);
             instance.rotation = rotDist(gen);
@@ -192,7 +184,7 @@ namespace space
         glGenBuffers(1, &instanceVBO);
         glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
 
-        // We'll pack instance data: position (3), color (3), scale (1), rotation (1) = 8 floats per instance
+        // Pack instance data: position (3), color (3), scale (1), rotation (1) = 8 floats
         std::vector<float> instanceData;
         instanceData.reserve(instances.size() * 8);
 
@@ -252,7 +244,7 @@ namespace space
 
         glBindVertexArray(vao_id);
 
-        // Use instanced drawing
+        // Use instanced drawing - this is much more efficient than drawing each instance separately
         glDrawElementsInstanced(GL_TRIANGLES,
             static_cast<GLsizei>(indices.size()),
             GL_UNSIGNED_INT,

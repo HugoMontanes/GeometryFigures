@@ -56,15 +56,15 @@ namespace space
 		activeCamera->rotation = glm::vec3(-0.4f, 0.0f, 0.0f);
 		root->addChild(activeCamera);
 
-		auto terrainNode = space::createTerrainNode(
-			*this,                          // Scene reference
-			"main_terrain",                 // Node name
-			"../../../shared/assets/textures/heightmaps/heightmap_010.png",      // Path to height map
-			1.0f,                           // Height scale
-			glm::vec3(0, -2, 0),            // Position
-			glm::vec3(0, 0, 0),             // Rotation
-			glm::vec3(10.0f)                 // Scale
+		auto terrainNode = std::make_shared<SceneNode>("main_terrain");
+		auto terrainMesh = std::make_shared<HeightMapTerrain>(
+			"../../../shared/assets/textures/heightmaps/heightmap_010.png",
+			1.0f  // height scale
 		);
+		terrainNode->mesh = terrainMesh;
+		terrainNode->position = glm::vec3(0, -2, 0);
+		terrainNode->scale = glm::vec3(10.0f);
+		root->addChild(terrainNode);
 
 		/*auto planeNode = std::make_shared<SceneNode>("plane");
 		planeNode->mesh = std::make_shared<Plane>(5, 5, 10.0f, 10.0f);
@@ -75,6 +75,57 @@ namespace space
 		coneNode->mesh = std::make_shared<Cone>(100);
 		coneNode->position = glm::vec3(0, 1, 0);
 		planeNode->addChild(coneNode);*/
+
+		// Initialize grass shader
+		grass_shader = std::make_unique<ShaderProgram>();
+
+		VertexShader grass_vertex_shader;
+		if (!grass_vertex_shader.loadFromFile("../../../shared/assets/shaders/vertex/grass_vertex_shader.glsl"))
+		{
+			throw std::runtime_error("Failed to load grass vertex shader.");
+		}
+
+		// Can reuse the same fragment shader as terrain
+		FragmentShader grass_fragment_shader;
+		if (!grass_fragment_shader.loadFromFile("../../../shared/assets/shaders/fragment/fragment_shader.glsl"))
+		{
+			throw std::runtime_error("Failed to load grass fragment shader.");
+		}
+
+		grass_shader->attachShader(grass_vertex_shader);
+		grass_shader->attachShader(grass_fragment_shader);
+
+		if (!grass_shader->link())
+		{
+			throw std::runtime_error("Failed to link grass shader program.");
+		}
+
+		grass_shader->detachAndDeleteShaders({ grass_vertex_shader, grass_fragment_shader });
+
+		// Get uniform locations for grass shader
+		grass_shader->use();
+		grass_model_view_matrix_id = glGetUniformLocation(grass_shader->getProgramID(), "model_view_matrix");
+		grass_normal_matrix_id = glGetUniformLocation(grass_shader->getProgramID(), "normal_matrix");
+		grass_projection_matrix_id = glGetUniformLocation(grass_shader->getProgramID(), "projection_matrix");
+
+		// Create grass on the terrain
+		if (terrainMesh)
+		{
+			grassMesh = terrainMesh->createGrassForTerrain(
+				*terrainMesh, 
+				"../../../shared/assets/models/SM_Grass.fbx",
+				5000);
+
+			if (grassMesh)
+			{
+				std::cout << "Successfully created " << grassMesh->getInstanceCount()
+					<< " grass instances on terrain" << std::endl;
+			}
+			else
+			{
+				std::cerr << "Failed to create grass instances" << std::endl;
+			}
+		}
 
 		// Initialize skybox shader
 		skybox_shader = std::make_unique<ShaderProgram>();
@@ -196,6 +247,24 @@ namespace space
 		shader_program->use();
 		glUniformMatrix4fv(projection_matrix_id, 1, GL_FALSE, glm::value_ptr(projection_matrix));
 		renderNode(root, view_matrix);
+
+		if (grassMesh && grassMesh->getInstanceCount() > 0)
+		{
+			grass_shader->use();
+
+			// Grass uses world space positions, so we use identity for model matrix
+			glm::mat4 model_matrix = glm::mat4(1.0f);
+			glm::mat4 model_view_matrix = view_matrix * model_matrix;
+			glm::mat4 normal_matrix = glm::transpose(glm::inverse(model_view_matrix));
+
+			// Send matrices to shader
+			glUniformMatrix4fv(grass_model_view_matrix_id, 1, GL_FALSE, glm::value_ptr(model_view_matrix));
+			glUniformMatrix4fv(grass_normal_matrix_id, 1, GL_FALSE, glm::value_ptr(normal_matrix));
+			glUniformMatrix4fv(grass_projection_matrix_id, 1, GL_FALSE, glm::value_ptr(projection_matrix));
+
+			// Render all grass instances with one draw call
+			grassMesh->render();
+		}
 
 		GLenum error = glGetError();
 		if (error != GL_NO_ERROR)
