@@ -368,9 +368,6 @@ namespace space
 		// It means: final_color = source_color * source_alpha + dest_color * (1 - source_alpha)
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-		// Optional: For better transparency, we might want to disable writing to the depth buffer
-		// while still testing against it. This prevents transparent objects from occluding
-		// other transparent objects behind them.
 		glDepthMask(GL_FALSE);
 
 		// ===== STEP 4: Render Transparent Objects =====
