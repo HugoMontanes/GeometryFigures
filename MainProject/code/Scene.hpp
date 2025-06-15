@@ -22,6 +22,7 @@
 #include "Camera.hpp"
 #include "Skybox.hpp"
 #include "GrassMesh.hpp"
+#include "Cube.hpp"
 
 namespace space
 {
@@ -56,6 +57,19 @@ namespace space
         GLuint grass_projection_matrix_id = -1;
         GLint grass_normal_matrix_id = -1;
 
+        //Transparent objects
+        std::shared_ptr<SceneNode> transparentCubeNode;
+        std::unique_ptr<ShaderProgram> transparent_shader;
+        GLuint transparent_model_view_matrix_id = -1;
+        GLuint transparent_projection_matrix_id = -1;
+        GLint transparent_normal_matrix_id = -1;
+        GLint transparency_uniform_id = -1;
+
+        // Rotation control for the transparent cube
+        float cubeRotationSpeed = 1.0f;  // Radians per second
+        float cubeRotationAngle = 0.0f;  // Current rotation angle
+
+
 
     public:
         
@@ -63,12 +77,23 @@ namespace space
 
         void update(float deltaTime);
         void render();
+        void renderOpaqueNodes(const std::shared_ptr<SceneNode>& node, const glm::mat4& viewMatrix);
         void resize(unsigned width, unsigned height);
         void renderNode(const std::shared_ptr<SceneNode>& node, const glm::mat4& viewMatrix);
         std::shared_ptr<SceneNode> createNode(const std::string& name, std::shared_ptr<SceneNode> parent = nullptr);
         std::shared_ptr<SceneNode> findNode(const std::string& name, const std::shared_ptr<SceneNode>& startNode);
         void handleKeyboard(const Uint8* keyboardState);
+        void toggleCubeRotation();
         void updateCamera(float deltaTime);
         void resetCameraRotation();
+
+        void updateTransparencyAnimation(float deltaTime);
+
+        void setTransparency(float alpha) {
+            if (transparent_shader && transparency_uniform_id != -1) {
+                transparent_shader->use();
+                glUniform1f(transparency_uniform_id, alpha);
+            }
+        }
     };
 }

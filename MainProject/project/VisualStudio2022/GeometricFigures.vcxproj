@@ -136,6 +136,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\code\Cone.cpp" />
+    <ClCompile Include="..\..\code\Cube.cpp" />
     <ClCompile Include="..\..\code\GrassMesh.cpp" />
     <ClCompile Include="..\..\code\HeightMapTerrain.cpp" />
     <ClCompile Include="..\..\code\main.cpp" />
@@ -149,6 +150,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\code\Camera.hpp" />
     <ClInclude Include="..\..\code\Cone.hpp" />
+    <ClInclude Include="..\..\code\Cube.hpp" />
     <ClInclude Include="..\..\code\FragmentShader.hpp" />
     <ClInclude Include="..\..\code\GrassMesh.hpp" />
     <ClInclude Include="..\..\code\HeightMapTerrain.hpp" />
