@@ -1,3 +1,8 @@
+/*
+* Este código es de dominio público
+* Realizado por Hugo Montañés García
+*/
+
 #include "Scene.hpp"
 #include "Window.hpp"
 

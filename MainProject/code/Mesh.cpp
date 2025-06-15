@@ -1,3 +1,7 @@
+/*
+* Este código es de dominio público
+* Realizado por Hugo Montañés García
+*/
 
 #include "Mesh.hpp"
 
@@ -27,10 +31,10 @@ namespace space
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), nullptr);
 
 		/**
+		glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(glm::vec3), normals.data(), GL_STATIC_DRAW);
 		* Normals vbo
 		*/
 		glBindBuffer(GL_ARRAY_BUFFER, vbo_ids[NORMALS_VBO]);
-		glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(glm::vec3), normals.data(), GL_STATIC_DRAW);
 		
 		glEnableVertexAttribArray(1);
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), nullptr);

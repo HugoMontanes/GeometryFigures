@@ -1,7 +1,7 @@
-
-
-//#ifndef PLANE_HEADER        //Check if PLANE_HEADER is not defined
-//#define PLANE_HEADER        //Define PLANE_HEADER
+/*
+* Este código es de dominio público
+* Realizado por Hugo Montañés García
+*/
 
 #pragma once
 

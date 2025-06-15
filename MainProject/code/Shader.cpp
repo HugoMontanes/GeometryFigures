@@ -1,3 +1,7 @@
+/*
+* Este código es de dominio público
+* Realizado por Hugo Montañés García
+*/
 
 #include"Shader.hpp"
 #include <string>
